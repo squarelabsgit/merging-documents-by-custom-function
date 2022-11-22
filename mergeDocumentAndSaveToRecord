@@ -1,0 +1,31 @@
+//Required Variables
+//Insert Merge Document Template ID
+mergeDocumentId = "<INSERT MERGE DOCUMENT ID HERE>";
+//
+//Get the Deal Record
+dealMap = zoho.crm.getRecordById("Deals",dealId);
+//Get Deal Variables
+dealName = dealMap.get("Deal_Name");
+dealType = dealMap.get("Type");
+dealAmount = dealMap.get("Amount");
+//
+//Prepare the merge document requirements
+documentName = "Proposal Document";
+mergeData = Map();
+mergeData.put("Deal_Name",dealName);
+mergeData.put("Type",dealType);
+mergeData.put("Amount",dealAmount);
+mergeValues = Map();
+dataMap = Map();
+dataMap.put("data",mergeData);
+mergeValues.put("merge_data",dataMap);
+//Merge the Document
+mergedPDF = zoho.writer.mergeAndDownload(mergeDocumentId,"pdf",mergeValues,"<INSERT CONNECTION NAME HERE>");
+//info mergedPDF;
+//Rename Document to PDF
+mergedPDF.setFileName(documentName + ".pdf");
+//Save document to the Deal Record
+saveAttachment = zoho.crm.attachFile("Deals",dealId,mergedPDF);
+//info saveAttachment;
+//What you want to see after the button is pressed inside the return statement.
+return "Proposal Created";

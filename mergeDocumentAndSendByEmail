@@ -1,0 +1,107 @@
+//Required Variables
+//Insert Merge Document Template ID
+mergeDocumentId = "<INSERT MERGE DOCUMENT ID HERE>";
+emailTemplateId = "<INSERT EMAIL TEMPLATE ID HERE>";
+//
+//Get the Deal Record
+dealMap = zoho.crm.getRecordById("Deals",dealId);
+//Get Deal Variables
+dealName = dealMap.get("Deal_Name");
+dealType = dealMap.get("Type");
+dealAmount = dealMap.get("Amount");
+//
+if(!isnull(dealMap.get("Contact_Name")))
+{
+	//Get Contact ID
+	contactId = dealMap.get("Contact_Name").get("id");
+	//Get Contact Record
+	contactMap = zoho.crm.getRecordById("Contacts",contactId);
+	contactEmail = contactMap.get("Email");
+	//Check Contact has an Email Address
+	if(!isnull(contactEmail))
+	{
+		//Prepare the merge document requirements
+		documentName = "Proposal Document";
+		mergeData = Map();
+		mergeData.put("Deal_Name",dealName);
+		mergeData.put("Type",dealType);
+		mergeData.put("Amount",dealAmount);
+		mergeValues = Map();
+		dataMap = Map();
+		dataMap.put("data",mergeData);
+		mergeValues.put("merge_data",dataMap);
+		//Merge the Document
+		mergedPDF = zoho.writer.mergeAndDownload(mergeDocumentId,"pdf",mergeValues,"<INSERT CONNECTION NAME HERE>");
+		//info mergedPDF;
+		//Rename Document to PDF
+		mergedPDF.setFileName(documentName + ".pdf");
+		//Save document to the Deal Record
+		saveAttachment = zoho.crm.attachFile("Deals",dealId,mergedPDF);
+		//info saveAttachment;
+		//Get the Attachment ID
+		attachmentId = saveAttachment.get("details").get("id");
+		//Get the Attachment Zoho File Id by searching all Deal Attachments
+		dealAttachments = zoho.crm.getRelatedRecords("Attachments","Deals",dealId);
+		//info dealAttachments;
+		for each  attachment in dealAttachments
+		{
+			//Check for a matching attachment Id
+			if(attachment.get("id") = attachmentId)
+			{
+				//Get zoho file Id
+				fileId = attachment.get("$file_id");
+			}
+		}
+		if(!isnull(fileId))
+		{
+			//Prepare Send Email Settings
+			dataMap = Map();
+			dataList = List();
+			//From
+			dataMap.put("from",{"email":"<INSERT FROM EMAIL HERE>"});
+			//
+			toList = List();
+			toList.add({"email":contactEmail});
+			dataMap.put("to",toList);
+			//
+			dataMap.put("template",{"id":emailTemplateId});
+			//
+			attachmentList = List();
+			attachmentList.add({"id":fileId});
+			dataMap.put("attachments",attachmentList);
+			//
+			dataMap.put("org_email",false);
+			dataList.add(dataMap);
+			//
+			paramMap = Map();
+			paramMap.put("data",dataList);
+			//
+			//Be sure to update your URL Based on your Data Centre
+			sendDealEmail = invokeurl
+			[
+				url :"https://www.zohoapis.com/crm/v3/Deals/" + dealId + "/actions/send_mail"
+				type :POST
+				parameters:paramMap.toString()
+				connection:"<INSERT CONNECTION NAME HERE>"
+			];
+			info sendDealEmail;
+			//What you want to see after the button is pressed inside the return statement.
+			return "Proposal Created & Sent to Contact Email: " + contactEmail;
+		}
+		else
+		{
+			//Log Error as no file has been found with matching ID
+			return "No Attachment Found with matching Id";
+		}
+	}
+	else
+	{
+		//No Email on Linked Deal Contact
+		return "Related Contact does not have an Email";
+	}
+}
+else
+{
+	//No Contact Linked to Deal Record
+	return "No Contact Linked to this Deal Record";
+}

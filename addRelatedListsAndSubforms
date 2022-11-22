@@ -1,0 +1,28 @@
+//Original Code Base is located in this file
+//https://github.com/squarelabsgit/merging-documents-by-custom-function/blob/main/mergeDocumentAndSaveToRecord
+//
+//Below is the additional code block to add to your function.
+//
+//Refer to YouTube Video: https://youtu.be/W5c-DzEW1XI
+//
+//Declare Jobs List
+jobsList = List();
+//Get all Jobs related to the Deal
+relatedJobs = zoho.crm.getRelatedRecords("Jobs","Deals",dealId);
+//Loop through the jobs and save to list using the right field names.
+for each job in relatedJobs
+{
+	jobsList.add({
+		"Jobs.Name":job.get("Name"),
+		"Jobs.Owner":job.get("Owner").get("name"),
+		"Jobs.Status":job.get("Status"),
+		"Jobs.Date" : job.get("Date")
+	});
+}
+info jobsList;
+//
+//
+//Add Jobs List component here inside the merge Data Section
+//
+mergeData.put("Jobs",jobsList);
+//

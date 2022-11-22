@@ -1,0 +1,7 @@
+//Required Variables
+mergeDocumentId = "<INSERT MERGE DOCUMENT ID HERE>";
+//
+//Get Merge Fields in document - Only needed during Configuration
+mergeFields = zoho.writer.getMergeFields(mergeDocumentId,"<INSERT CONNECTION NAME HERE>");
+//
+return mergeFields;
